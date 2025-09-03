@@ -24,7 +24,7 @@
             version = "0.1.0";
             src = ./.;
             
-            cargoHash = "sha256-+aeFogSIiqlUwBeQM6dzFGLEw8RTIJiUACVQ3k0J3MM=";
+            cargoLock = { lockFile = ./Cargo.lock; };
             
             nativeBuildInputs = [
               pkgs.pkg-config
