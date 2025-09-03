@@ -43,6 +43,11 @@
    ./result/bin/notify
    ```
 
+   或者直接运行（无需先构建）：
+   ```bash
+   nix run
+   ```
+
 ### 方法二：传统Rust构建
 
 1. 安装Rust和Cargo（如果尚未安装）：
