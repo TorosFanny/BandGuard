@@ -22,6 +22,29 @@
 
 ## 安装
 
+### 方法一：使用Nix Flake（推荐）
+
+如果你使用Nix包管理器，可以直接使用flake构建项目：
+
+1. 确保已安装Nix并启用flakes功能
+2. 克隆项目：
+   ```bash
+   git clone <项目地址>
+   cd notify
+   ```
+
+3. 使用Nix构建：
+   ```bash
+   nix build
+   ```
+
+4. 运行程序：
+   ```bash
+   ./result/bin/notify
+   ```
+
+### 方法二：传统Rust构建
+
 1. 安装Rust和Cargo（如果尚未安装）：
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -41,7 +64,12 @@
 
 ## 使用方法
 
-运行程序：
+### 使用Nix构建的版本：
+```bash
+./result/bin/notify
+```
+
+### 使用Cargo构建的版本：
 ```bash
 ./target/release/notify
 ```
@@ -50,6 +78,29 @@
 ```bash
 cargo run
 ```
+
+## 开发环境
+
+### 使用Nix开发环境
+
+进入包含所有必要依赖的开发环境：
+```bash
+nix develop
+```
+
+这将提供：
+- Rust编译器和Cargo
+- pkg-config
+- DBus开发库
+- speedtest-cli
+
+### 传统开发环境
+
+确保系统已安装：
+- Rust和Cargo
+- pkg-config
+- DBus开发库
+- speedtest-cli
 
 ## 配置
 

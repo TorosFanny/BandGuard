@@ -59,9 +59,9 @@ fn send_notification(title: &str, body: &str) -> Result<()> {
             "", // 图标 (留空)
             title, // 标题
             body, // 正文
-            vec![], // 动作列表
-            std::collections::HashMap::new(), // 提示
-            -1, // 超时时间 (毫秒, -1表示默认)
+            Vec::<String>::new(), // 动作列表
+            std::collections::HashMap::<String, dbus::arg::Variant<Box<dyn dbus::arg::RefArg>>>::new(), // 提示
+            -1i32, // 超时时间 (毫秒, -1表示默认)
         ),
     )
     .context("Failed to send notification")?;
