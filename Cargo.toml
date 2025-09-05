@@ -4,9 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "process"] }  # 添加rt-multi-thread特性
+tokio = { version = "1.0", default-features = false, features = ["rt", "macros", "process"] }  # 使用单线程运行时缩小体积
 dbus = "0.9"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.0", default-features = false, features = ["std", "derive"] }
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = 0
+incremental = false
