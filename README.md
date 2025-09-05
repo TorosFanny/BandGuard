@@ -35,7 +35,7 @@
 
 3. 使用Nix构建：
    ```bash
-   nix build
+   nix build path:.
    ```
 
 4. 运行程序：
@@ -45,7 +45,7 @@
 
    或者直接运行（无需先构建）：
    ```bash
-   nix run
+   nix run path:.
    ```
 
 ### 方法二：传统Rust构建
@@ -84,13 +84,65 @@
 cargo run
 ```
 
+## systemd 集成（用户级）
+
+本项目在安装包中自带用户级 systemd 单元文件（随包安装到 $out/share/systemd/user）：
+- notify.service：Type=oneshot，ExecStart 运行该程序，默认低优先级（Nice=19，IOSchedulingClass=idle）
+- notify.timer：OnCalendar=daily，RandomizedDelaySec=1h，Persistent=true
+
+方案 A：在系统 flake（NixOS）中声明式启用（推荐）
+- 假设此项目作为 flake input（根据你的环境替换 URL）：
+  ```nix
+  # flake.nix (system)
+  {
+    inputs.notify.url = "path:/path/to/notify"; # 或者 git+https://... 等
+    outputs = { self, nixpkgs, notify, ... }: {
+      nixosConfigurations.my-host = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          notify.nixosModules.notify
+          {
+            services.notify = {
+              enable = true;
+              users = [ "qs" ];       # 需要启用的用户
+              onCalendar = "daily";   # 也可用 "03:00" 等
+              randomizedDelaySec = "1h";
+              lowPriority = true;
+            };
+          }
+        ];
+      };
+    };
+  }
+  ```
+- 重建系统后，该用户的 notify.timer（用户级）将自动启用，并通过 services.logind.lingerUsers 让用户登出后也能运行。
+
+方案 B：不使用模块，手动启用（用户级）
+- 让系统或用户路径里有该包（例如 NixOS 上：`systemd.user.packages = [ inputs.notify.packages.${pkgs.system}.default ];`）
+- 以目标用户执行：
+  ```bash
+  systemctl --user daemon-reload
+  systemctl --user enable --now notify.timer
+  # 确保登出后仍能运行（按需）：
+  loginctl enable-linger <username>
+  ```
+- 查看状态与日志：
+  ```bash
+  systemctl --user status notify.timer
+  journalctl --user -u notify.service
+  ```
+
+提示
+- 若在本地直接运行 Nix 命令，建议使用 `path:.` 前缀（如 `nix build path:.`、`nix develop path:.`），以避免 `.` 触发 git+file 解析导致的 libgit2 兼容性问题。
+- 进入目录后也可使用 direnv（`.envrc` 使用 `use flake path:.`）自动加载开发环境。
+
 ## 开发环境
 
 ### 使用Nix开发环境
 
 进入包含所有必要依赖的开发环境：
 ```bash
-nix develop
+nix develop path:.
 ```
 
 这将提供：

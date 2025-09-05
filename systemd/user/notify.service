@@ -1,0 +1,10 @@
+[Unit]
+Description=Notify bandwidth monitor
+
+[Service]
+Type=oneshot
+ExecStart=@notify_bin@
+Nice=19
+IOSchedulingClass=idle
+StandardOutput=journal
+StandardError=journal
