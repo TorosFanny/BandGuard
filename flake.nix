@@ -106,8 +106,8 @@
         # Ensure specified users have the package and keep user systemd running even when not logged in
         users.users = genAttrs cfg.users (u: {
           packages = [ pkg ];
+          linger = true;
         });
-        services.logind.lingerUsers = cfg.users;
         systemd.user.services.bandguard = {
           Unit = {
             Description = "BandGuard bandwidth monitor";
