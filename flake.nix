@@ -26,6 +26,7 @@
         
         nativeBuildInputs = [
           pkgs.pkg-config
+          pkgs.makeWrapper
         ];
         
         buildInputs = [
@@ -42,6 +43,13 @@
           install -Dm644 ${./systemd/user/bandguard.timer} $out/share/systemd/user/bandguard.timer
           substituteInPlace $out/share/systemd/user/bandguard.service \
             --replace @bandguard_bin@ "$out/bin/bandguard"
+
+          # Ensure runtime PATH in user systemd for required tools
+          wrapProgram "$out/bin/bandguard" \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.python3Packages.speedtest-cli pkgs.which ]}
+
+          # Provide a speedtest-cli alias in case only 'speedtest' is shipped
+          ln -sf ${pkgs.python3Packages.speedtest-cli}/bin/speedtest $out/bin/speedtest-cli
         '';
 
         meta = with pkgs.lib; {
