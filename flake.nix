@@ -109,10 +109,8 @@
           linger = true;
         });
         systemd.user.services.bandguard = {
-          Unit = {
-            Description = "BandGuard bandwidth monitor";
-          };
-          Service = {
+          description = "BandGuard bandwidth monitor";
+          serviceConfig = {
             Type = "oneshot";
             ExecStart = "${pkg}/bin/bandguard";
           } // (if cfg.lowPriority then {
@@ -121,17 +119,13 @@
           } else { });
         };
         systemd.user.timers.bandguard = {
-          Unit = {
-            Description = "BandGuard bandwidth monitor (daily)";
-          };
-          Timer = {
+          description = "BandGuard bandwidth monitor (daily)";
+          timerConfig = {
             OnCalendar = cfg.onCalendar;
             RandomizedDelaySec = cfg.randomizedDelaySec;
             Persistent = true;
           };
-          Install = {
-            WantedBy = [ "timers.target" ];
-          };
+          wantedBy = [ "timers.target" ];
         };
       };
     };
