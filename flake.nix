@@ -22,7 +22,7 @@
       default = pkgs.rustPlatform.buildRustPackage {
         pname = "notify";
         version = "0.1.0";
-        src = ./.;
+        src = pkgs.lib.cleanSource ./.;
         
         cargoLock = { lockFile = ./Cargo.lock; };
         
