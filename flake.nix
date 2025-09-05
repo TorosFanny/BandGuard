@@ -104,6 +104,11 @@
           default = true;
           description = "Run with Nice=19 and IOSchedulingClass=idle.";
         };
+        threshold = mkOption {
+          type = types.number;
+          default = 200;
+          description = "Required: download speed threshold in Mbits/s (passed as --threshold).";
+        };
         package = mkOption {
           type = types.package;
           default = self.packages.${pkgs.system}.default;
@@ -120,7 +125,7 @@
           description = "BandGuard bandwidth monitor";
           serviceConfig = {
             Type = "oneshot";
-            ExecStart = "${pkg}/bin/bandguard";
+            ExecStart = "${pkg}/bin/bandguard --threshold ${toString cfg.threshold}";
           } // (if cfg.lowPriority then {
             Nice = 19;
             IOSchedulingClass = "idle";

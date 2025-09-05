@@ -1,8 +1,18 @@
 use anyhow::{Context, Result};
+use clap::Parser;
 use dbus::blocking::Connection;
 use serde::Deserialize;
 use std::process::Command;
 use tokio::process::Command as TokioCommand;
+
+/// BandGuard - 宽带速度监控工具
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// 下载速度阈值 (Mbits/s)，低于此值时发送通知
+    #[arg(short, long, value_name = "MBITS", required = true)]
+    threshold: f64,
+}
 
 // Speedtest结果结构体
 #[derive(Deserialize, Debug)]
@@ -71,8 +81,10 @@ fn send_notification(title: &str, body: &str) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args = Args::parse();
+
     println!("Running speed test...");
-    
+
     // 检查speedtest-cli是否已安装
     let check = Command::new("which").arg("speedtest-cli").output()?;
     if !check.status.success() {
@@ -86,11 +98,11 @@ async fn main() -> Result<()> {
     println!("Upload speed: {:.2} Mbits/s", result.upload);
     println!("Ping: {:.2} ms", result.ping);
 
-    // 如果下载速度低于300Mbits/s，发送通知
-    if result.download < 300.0 {
+    // 如果下载速度低于阈值，发送通知
+    if result.download < args.threshold {
         send_notification(
             "宽带下载速度低于阈值",
-            &format!("下载速度: {:.2} Mbits/s (阈值: 300 Mbits/s)\n上传速度: {:.2} Mbits/s\nPing: {:.2} ms", result.download, result.upload, result.ping),
+            &format!("下载速度: {:.2} Mbits/s (阈值: {:.0} Mbits/s)\n上传速度: {:.2} Mbits/s\nPing: {:.2} ms", result.download, args.threshold, result.upload, result.ping),
         )?;
         println!("Notification sent");
     }

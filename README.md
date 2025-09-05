@@ -1,12 +1,12 @@
 # BandGuard - 宽带测速通知工具
 
-这是一个使用Rust编写的宽带测速工具，当下载速度低于300Mbits/s时，会通过D-Bus向GNOME桌面发送通知。
+这是一个使用Rust编写的宽带测速工具，当下载速度低于可配置阈值时，会通过D-Bus向GNOME桌面发送通知。
 
 ## 功能
 
 - 使用speedtest-cli进行标准的网络速度测试
 - 测试下载速度、上传速度和Ping延迟
-- 当下载速度低于阈值（300Mbits/s）时，自动发送桌面通知
+- 当下载速度低于可配置阈值时，自动发送桌面通知
 
 ## 依赖
 
@@ -71,23 +71,23 @@
 
 ### 使用Nix构建的版本：
 ```bash
-./result/bin/bandguard
+./result/bin/bandguard --threshold 300
 ```
 
 ### 使用Cargo构建的版本：
 ```bash
-./target/release/bandguard
+./target/release/bandguard --threshold 300
 ```
 
 或者直接使用Cargo运行：
 ```bash
-cargo run
+cargo run -- --threshold 300
 ```
 
 ## systemd 集成（用户级）
 
 本项目在安装包中自带用户级 systemd 单元文件（随包安装到 $out/share/systemd/user）：
-- bandguard.service：Type=oneshot，ExecStart 运行该程序，默认低优先级（Nice=19，IOSchedulingClass=idle）
+- bandguard.service：Type=oneshot，ExecStart 运行该程序（注意：程序需要必填参数 --threshold），默认低优先级（Nice=19，IOSchedulingClass=idle）
 - bandguard.timer：OnCalendar=daily，RandomizedDelaySec=1h，Persistent=true
 
 方案 A：在系统 flake（NixOS）中声明式启用（推荐）
@@ -105,6 +105,7 @@ cargo run
             services.bandguard = {
               enable = true;
               users = [ "qs" ];       # 需要启用的用户
+              threshold = 300;        # 必填：下载速度阈值（Mbits/s）
               onCalendar = "daily";   # 也可用 "03:00" 等
               randomizedDelaySec = "1h";
               lowPriority = true;
@@ -125,6 +126,21 @@ cargo run
   systemctl --user enable --now bandguard.timer
   # 确保登出后仍能运行（按需）：
   loginctl enable-linger <username>
+  ```
+- 因程序要求必填参数 `--threshold`，请覆写用户级 unit 的 ExecStart 以传入阈值（示例阈值 300）：
+  ```bash
+  systemctl --user edit bandguard.service
+  ```
+  在打开的编辑器中写入（注意用实际路径替换，下方路径可通过 `systemctl --user cat bandguard.service` 查看原始 ExecStart）：
+  ```
+  [Service]
+  ExecStart=
+  ExecStart=/nix/store/...-bandguard-0.1.0/bin/bandguard --threshold 300
+  ```
+  保存退出后重新加载：
+  ```bash
+  systemctl --user daemon-reload
+  systemctl --user restart bandguard.service
   ```
 - 查看状态与日志：
   ```bash
@@ -161,7 +177,37 @@ nix develop path:.
 
 ## 配置
 
-如果需要修改速度阈值，可以编辑`src/main.rs`文件中的`main`函数，修改`if result.download < 300.0`这一行中的300.0为其他值。
+### 命令行参数
+
+阈值为必填参数（无默认值），可通过命令行传入：
+
+```bash
+bandguard --threshold 200
+# 或者使用短参数
+bandguard -t 200
+```
+
+
+### 查看帮助
+
+```bash
+bandguard --help
+```
+
+### NixOS 模块配置阈值
+
+如果在 NixOS 中通过本项目提供的模块启用服务，请在系统配置中设置必填的阈值选项：
+
+```nix
+services.bandguard = {
+  enable = true;
+  users = [ "qs" ];
+  threshold = 300;        # 必填：下载速度阈值（Mbits/s）
+  onCalendar = "daily";
+  randomizedDelaySec = "1h";
+  lowPriority = true;
+};
+```
 
 ## 许可证
 
