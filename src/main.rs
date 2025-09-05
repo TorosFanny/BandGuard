@@ -54,7 +54,7 @@ fn send_notification(title: &str, body: &str) -> Result<()> {
         "org.freedesktop.Notifications",
         "Notify",
         (
-            "Bandwidth Monitor", // 应用名称
+            "BandGuard", // 应用名称
             0u32, // 替换ID (0表示新通知)
             "", // 图标 (留空)
             title, // 标题

@@ -1,4 +1,4 @@
-# 宽带测速通知工具
+# BandGuard - 宽带测速通知工具
 
 这是一个使用Rust编写的宽带测速工具，当下载速度低于300Mbits/s时，会通过D-Bus向GNOME桌面发送通知。
 
@@ -30,7 +30,7 @@
 2. 克隆项目：
    ```bash
    git clone <项目地址>
-   cd notify
+   cd bandguard
    ```
 
 3. 使用Nix构建：
@@ -40,7 +40,7 @@
 
 4. 运行程序：
    ```bash
-   ./result/bin/notify
+   ./result/bin/bandguard
    ```
 
    或者直接运行（无需先构建）：
@@ -63,7 +63,7 @@
 3. 克隆项目并构建：
    ```bash
    git clone <项目地址>
-   cd notify
+   cd bandguard
    cargo build --release
    ```
 
@@ -71,12 +71,12 @@
 
 ### 使用Nix构建的版本：
 ```bash
-./result/bin/notify
+./result/bin/bandguard
 ```
 
 ### 使用Cargo构建的版本：
 ```bash
-./target/release/notify
+./target/release/bandguard
 ```
 
 或者直接使用Cargo运行：
@@ -87,22 +87,22 @@ cargo run
 ## systemd 集成（用户级）
 
 本项目在安装包中自带用户级 systemd 单元文件（随包安装到 $out/share/systemd/user）：
-- notify.service：Type=oneshot，ExecStart 运行该程序，默认低优先级（Nice=19，IOSchedulingClass=idle）
-- notify.timer：OnCalendar=daily，RandomizedDelaySec=1h，Persistent=true
+- bandguard.service：Type=oneshot，ExecStart 运行该程序，默认低优先级（Nice=19，IOSchedulingClass=idle）
+- bandguard.timer：OnCalendar=daily，RandomizedDelaySec=1h，Persistent=true
 
 方案 A：在系统 flake（NixOS）中声明式启用（推荐）
 - 假设此项目作为 flake input（根据你的环境替换 URL）：
   ```nix
   # flake.nix (system)
   {
-    inputs.notify.url = "path:/path/to/notify"; # 或者 git+https://... 等
-    outputs = { self, nixpkgs, notify, ... }: {
+    inputs.bandguard.url = "path:/path/to/bandguard"; # 或者 git+https://... 等
+    outputs = { self, nixpkgs, bandguard, ... }: {
       nixosConfigurations.my-host = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          notify.nixosModules.notify
+          bandguard.nixosModules.bandguard
           {
-            services.notify = {
+            services.bandguard = {
               enable = true;
               users = [ "qs" ];       # 需要启用的用户
               onCalendar = "daily";   # 也可用 "03:00" 等
@@ -115,21 +115,21 @@ cargo run
     };
   }
   ```
-- 重建系统后，该用户的 notify.timer（用户级）将自动启用，并通过 services.logind.lingerUsers 让用户登出后也能运行。
+- 重建系统后，该用户的 bandguard.timer（用户级）将自动启用，并通过 services.logind.lingerUsers 让用户登出后也能运行。
 
 方案 B：不使用模块，手动启用（用户级）
-- 让系统或用户路径里有该包（例如 NixOS 上：`systemd.user.packages = [ inputs.notify.packages.${pkgs.system}.default ];`）
+- 让系统或用户路径里有该包（例如 NixOS 上：`systemd.user.packages = [ inputs.bandguard.packages.${pkgs.system}.default ];`）
 - 以目标用户执行：
   ```bash
   systemctl --user daemon-reload
-  systemctl --user enable --now notify.timer
+  systemctl --user enable --now bandguard.timer
   # 确保登出后仍能运行（按需）：
   loginctl enable-linger <username>
   ```
 - 查看状态与日志：
   ```bash
-  systemctl --user status notify.timer
-  journalctl --user -u notify.service
+  systemctl --user status bandguard.timer
+  journalctl --user -u bandguard.service
   ```
 
 提示

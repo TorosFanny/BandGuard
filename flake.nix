@@ -18,7 +18,7 @@
       pkgs = pkgsFor system;
     in {
       default = pkgs.rustPlatform.buildRustPackage {
-        pname = "notify";
+        pname = "bandguard";
         version = "0.1.0";
         src = pkgs.lib.cleanSource ./.;
         
@@ -38,17 +38,17 @@
         ];
 
         postInstall = ''
-          install -Dm644 ${./systemd/user/notify.service} $out/share/systemd/user/notify.service
-          install -Dm644 ${./systemd/user/notify.timer} $out/share/systemd/user/notify.timer
-          substituteInPlace $out/share/systemd/user/notify.service \
-            --replace @notify_bin@ "$out/bin/notify"
+          install -Dm644 ${./systemd/user/bandguard.service} $out/share/systemd/user/bandguard.service
+          install -Dm644 ${./systemd/user/bandguard.timer} $out/share/systemd/user/bandguard.timer
+          substituteInPlace $out/share/systemd/user/bandguard.service \
+            --replace @bandguard_bin@ "$out/bin/bandguard"
         '';
 
         meta = with pkgs.lib; {
           description = "A Rust application that monitors bandwidth and sends notifications";
-          homepage = "https://github.com/user/notify";
+          homepage = "https://github.com/TorosFanny/BandGuard";
           license = licenses.mit;
-          mainProgram = "notify";
+          mainProgram = "bandguard";
         };
       };
     });
@@ -68,18 +68,18 @@
       };
     });
 
-    nixosModules.notify = { lib, pkgs, config, ... }:
+    nixosModules.bandguard = { lib, pkgs, config, ... }:
     let
       inherit (lib) mkOption mkEnableOption types mkIf genAttrs;
-      cfg = config.services.notify;
+      cfg = config.services.bandguard;
       pkg = cfg.package or self.packages.${pkgs.system}.default;
     in {
-      options.services.notify = {
-        enable = mkEnableOption "notify user timer";
+      options.services.bandguard = {
+        enable = mkEnableOption "bandguard user timer";
         users = mkOption {
           type = types.listOf types.str;
           default = [];
-          description = "Users to enable the notify user timer for (linger will be enabled).";
+              description = "Users to enable the bandguard user timer for (linger will be enabled).";
         };
         onCalendar = mkOption {
           type = types.str;
@@ -99,7 +99,7 @@
         package = mkOption {
           type = types.package;
           default = self.packages.${pkgs.system}.default;
-          description = "Package providing the notify binary.";
+          description = "Package providing the bandguard binary.";
         };
       };
       config = mkIf cfg.enable {
@@ -108,21 +108,21 @@
           packages = [ pkg ];
         });
         services.logind.lingerUsers = cfg.users;
-        systemd.user.services.notify = {
+        systemd.user.services.bandguard = {
           Unit = {
-            Description = "Notify bandwidth monitor";
+            Description = "BandGuard bandwidth monitor";
           };
           Service = {
             Type = "oneshot";
-            ExecStart = "${pkg}/bin/notify";
+            ExecStart = "${pkg}/bin/bandguard";
           } // (if cfg.lowPriority then {
             Nice = 19;
             IOSchedulingClass = "idle";
           } else { });
         };
-        systemd.user.timers.notify = {
+        systemd.user.timers.bandguard = {
           Unit = {
-            Description = "Notify bandwidth monitor (daily)";
+            Description = "BandGuard bandwidth monitor (daily)";
           };
           Timer = {
             OnCalendar = cfg.onCalendar;

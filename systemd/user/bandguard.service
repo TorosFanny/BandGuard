@@ -1,9 +1,9 @@
 [Unit]
-Description=Notify bandwidth monitor
+Description=BandGuard bandwidth monitor
 
 [Service]
 Type=oneshot
-ExecStart=@notify_bin@
+ExecStart=@bandguard_bin@
 Nice=19
 IOSchedulingClass=idle
 StandardOutput=journal

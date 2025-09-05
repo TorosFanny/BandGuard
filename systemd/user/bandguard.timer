@@ -1,5 +1,5 @@
 [Unit]
-Description=Notify bandwidth monitor (daily)
+Description=BandGuard bandwidth monitor (daily)
 
 [Timer]
 OnCalendar=daily
