@@ -35,7 +35,7 @@
         
         # Add runtime dependencies
         propagatedBuildInputs = [
-          pkgs.python3Packages.speedtest-cli
+          pkgs.speedtest-go
         ];
 
         postInstall = ''
@@ -46,10 +46,7 @@
 
           # Ensure runtime PATH in user systemd for required tools
           wrapProgram "$out/bin/bandguard" \
-            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.python3Packages.speedtest-cli pkgs.which ]}
-
-          # Provide a speedtest-cli alias in case only 'speedtest' is shipped
-          ln -sf ${pkgs.python3Packages.speedtest-cli}/bin/speedtest $out/bin/speedtest-cli
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.speedtest-go pkgs.which ]}
         '';
 
         meta = with pkgs.lib; {
@@ -71,8 +68,29 @@
           pkgs.cargo
           pkgs.pkg-config
           pkgs.dbus
-          pkgs.python3Packages.speedtest-cli
+          pkgs.speedtest-go
         ];
+      };
+    });
+
+    apps = forAllSystems (system:
+    let
+      pkgs = pkgsFor system;
+      pkg = self.packages.${system}.default;
+    in {
+      # 默认 app：提供可直接运行（带默认阈值）的包装器
+      default = {
+        type = "app";
+        program = "${pkgs.writeShellScriptBin "bandguard-default" ''
+          exec ${pkg}/bin/bandguard --threshold 200 "$@"
+        ''}/bin/bandguard-default";
+      };
+
+      # 原始可执行（不注入默认参数），可用来自定义全部参数：
+      # nix run .#bandguard -- --threshold 300 ...
+      bandguard = {
+        type = "app";
+        program = "${pkg}/bin/bandguard";
       };
     });
 
@@ -109,6 +127,11 @@
           default = 200;
           description = "Required: download speed threshold in Mbits/s (passed as --threshold).";
         };
+        speedtestArgs = mkOption {
+          type = types.listOf types.str;
+          default = [];
+          description = "Extra arguments for speedtest-go, will be joined with spaces and exported via BANDGUARD_SPEEDTEST_ARGS.";
+        };
         package = mkOption {
           type = types.package;
           default = self.packages.${pkgs.system}.default;
@@ -126,6 +149,7 @@
           serviceConfig = {
             Type = "oneshot";
             ExecStart = "${pkg}/bin/bandguard --threshold ${toString cfg.threshold}";
+            Environment = lib.optional (cfg.speedtestArgs != []) ("BANDGUARD_SPEEDTEST_ARGS=" + (lib.concatStringsSep " " cfg.speedtestArgs));
           } // (if cfg.lowPriority then {
             Nice = 19;
             IOSchedulingClass = "idle";

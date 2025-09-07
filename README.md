@@ -4,14 +4,14 @@
 
 ## 功能
 
-- 使用speedtest-cli进行标准的网络速度测试
+- 使用 speedtest-go 进行标准的网络速度测试
 - 测试下载速度、上传速度和Ping延迟
 - 当下载速度低于可配置阈值时，自动发送桌面通知
 
 ## 依赖
 
 - Rust 1.5+ 和 Cargo
-- `speedtest-cli` Python包
+- speedtest-go
 - GNOME桌面环境（用于发送通知）
 
 ### Rust 相对于 Python 项目的依赖优点
@@ -55,9 +55,9 @@
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
-2. 安装speedtest-cli：
+2. 安装 speedtest-go：
    ```bash
-   pip install speedtest-cli
+   nix profile install nixpkgs#speedtest-go
    ```
 
 3. 克隆项目并构建：
@@ -74,6 +74,11 @@
 ./result/bin/bandguard --threshold 300
 ```
 
+透传 speedtest-go 选项（通过环境变量）：
+```bash
+BANDGUARD_SPEEDTEST_ARGS="--server 1234 --timeout 15s" ./result/bin/bandguard --threshold 300
+```
+
 ### 使用Cargo构建的版本：
 ```bash
 ./target/release/bandguard --threshold 300
@@ -82,6 +87,11 @@
 或者直接使用Cargo运行：
 ```bash
 cargo run -- --threshold 300
+```
+
+透传 speedtest-go 选项（通过环境变量，Cargo 运行）：
+```bash
+BANDGUARD_SPEEDTEST_ARGS="--server 1234 --timeout 15s" cargo run -- --threshold 300
 ```
 
 ## systemd 集成（用户级）
@@ -106,6 +116,7 @@ cargo run -- --threshold 300
               enable = true;
               users = [ "qs" ];       # 需要启用的用户
               threshold = 300;        # 必填：下载速度阈值（Mbits/s）
+              speedtestArgs = [ "--server" "1234" "--timeout" "15s" ]; # 可选：透传给 speedtest-go 的参数
               onCalendar = "daily";   # 也可用 "03:00" 等
               randomizedDelaySec = "1h";
               lowPriority = true;
@@ -165,7 +176,7 @@ nix develop path:.
 - Rust编译器和Cargo
 - pkg-config
 - DBus开发库
-- speedtest-cli
+- speedtest-go
 
 ### 传统开发环境
 
@@ -173,7 +184,7 @@ nix develop path:.
 - Rust和Cargo
 - pkg-config
 - DBus开发库
-- speedtest-cli
+- speedtest-go
 
 ## 配置
 
@@ -203,6 +214,7 @@ services.bandguard = {
   enable = true;
   users = [ "qs" ];
   threshold = 300;        # 必填：下载速度阈值（Mbits/s）
+  speedtestArgs = [ "--server" "1234" "--timeout" "15s" ]; # 可选：透传给 speedtest-go 的参数
   onCalendar = "daily";
   randomizedDelaySec = "1h";
   lowPriority = true;
