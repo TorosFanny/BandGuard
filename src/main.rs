@@ -12,7 +12,6 @@ struct Args {
     /// 下载速度阈值 (Mbits/s)，低于此值时发送通知
     #[arg(short, long, value_name = "MBITS", required = true)]
     threshold: f64,
-
 }
 
 // Speedtest结果结构体

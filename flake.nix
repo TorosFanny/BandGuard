@@ -128,9 +128,9 @@
           description = "Required: download speed threshold in Mbits/s (passed as --threshold).";
         };
         speedtestArgs = mkOption {
-          type = types.listOf types.str;
-          default = [];
-          description = "Extra arguments for speedtest-go, will be joined with spaces and exported via BANDGUARD_SPEEDTEST_ARGS.";
+          type = types.str;
+          default = "";
+          description = "Extra arguments for speedtest-go, will be exported via BANDGUARD_SPEEDTEST_ARGS.";
         };
         package = mkOption {
           type = types.package;
@@ -149,7 +149,7 @@
           serviceConfig = {
             Type = "oneshot";
             ExecStart = "${pkg}/bin/bandguard --threshold ${toString cfg.threshold}";
-            Environment = lib.optional (cfg.speedtestArgs != []) ("BANDGUARD_SPEEDTEST_ARGS=" + (lib.concatStringsSep " " cfg.speedtestArgs));
+            Environment = "\"BANDGUARD_SPEEDTEST_ARGS=" + cfg.speedtestArgs + "\"";
           } // (if cfg.lowPriority then {
             Nice = 19;
             IOSchedulingClass = "idle";
