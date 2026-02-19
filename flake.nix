@@ -105,7 +105,7 @@
         users = mkOption {
           type = types.listOf types.str;
           default = [];
-              description = "Users to enable the bandguard user timer for (linger will be enabled).";
+              description = "Users to enable the bandguard user timer for";
         };
         onCalendar = mkOption {
           type = types.str;
@@ -139,10 +139,9 @@
         };
       };
       config = mkIf cfg.enable {
-        # Ensure specified users have the package and keep user systemd running even when not logged in
+        # Ensure specified users have the package
         users.users = genAttrs cfg.users (u: {
           packages = [ pkg ];
-          linger = true;
         });
         systemd.user.services.bandguard = {
           description = "BandGuard bandwidth monitor";
