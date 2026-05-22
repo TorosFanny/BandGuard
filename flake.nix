@@ -98,7 +98,7 @@
     let
       inherit (lib) mkOption mkEnableOption types mkIf genAttrs;
       cfg = config.services.bandguard;
-      pkg = cfg.package or self.packages.${pkgs.system}.default;
+      pkg = cfg.package or self.packages.${pkgs.stdenv.hostPlatform.system}.default;
     in {
       options.services.bandguard = {
         enable = mkEnableOption "bandguard user timer";
@@ -134,7 +134,7 @@
         };
         package = mkOption {
           type = types.package;
-          default = self.packages.${pkgs.system}.default;
+          default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
           description = "Package providing the bandguard binary.";
         };
       };
